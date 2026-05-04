@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Lesson } from "@/data/lessons";
 
-const ACCENTS = [
+const UNIT_ACCENTS = [
   {
     number: "bg-indigo-500 shadow-indigo-500/40",
     glow: "hover:shadow-indigo-500/20",
@@ -30,31 +30,11 @@ const ACCENTS = [
     text: "text-rose-400",
     label: "text-rose-400/60",
   },
-  {
-    number: "bg-cyan-500 shadow-cyan-500/40",
-    glow: "hover:shadow-cyan-500/20",
-    border: "hover:border-cyan-500/40",
-    text: "text-cyan-400",
-    label: "text-cyan-400/60",
-  },
-  {
-    number: "bg-violet-500 shadow-violet-500/40",
-    glow: "hover:shadow-violet-500/20",
-    border: "hover:border-violet-500/40",
-    text: "text-violet-400",
-    label: "text-violet-400/60",
-  },
 ];
 
-export default function LessonCard({
-  lesson,
-  lessonNumber,
-}: {
-  lesson: Lesson;
-  lessonNumber: number;
-}) {
-  const accent = ACCENTS[(lessonNumber - 1) % ACCENTS.length];
-  const num = String(lessonNumber).padStart(2, "0");
+export default function LessonCard({ lesson }: { lesson: Lesson }) {
+  const unitIndex = (parseInt(lesson.number.split(".")[0]) - 1) % UNIT_ACCENTS.length;
+  const accent = UNIT_ACCENTS[unitIndex];
 
   return (
     <Link
@@ -63,19 +43,16 @@ export default function LessonCard({
     >
       {/* Lesson number badge */}
       <div
-        className={`relative flex-shrink-0 flex h-16 w-16 items-center justify-center rounded-2xl ${accent.number} shadow-lg font-black text-white text-2xl`}
+        className={`relative flex-shrink-0 flex h-16 w-16 items-center justify-center rounded-2xl ${accent.number} shadow-lg font-black text-white text-lg leading-none`}
       >
-        {num}
+        {lesson.number}
       </div>
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <p className={`mb-0.5 text-xs font-bold uppercase tracking-widest ${accent.label}`}>
-          Lesson {lessonNumber}
-        </p>
-        <div className="flex items-center gap-2 mb-1">
+        <div className="flex items-center gap-2 mb-0.5">
           <span className="text-xl leading-none">{lesson.icon}</span>
-          <h2 className="font-bold text-white text-lg leading-tight truncate">
+          <h2 className="font-bold text-white text-base leading-tight truncate">
             {lesson.title}
           </h2>
         </div>
@@ -94,11 +71,7 @@ export default function LessonCard({
       <div
         className={`flex-shrink-0 flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 ${accent.text} transition-all duration-200 group-hover:scale-110 group-hover:border-white/20 group-hover:bg-white/10`}
       >
-        <svg
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="h-4 w-4 translate-x-0.5"
-        >
+        <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 translate-x-0.5">
           <path d="M8 5v14l11-7z" />
         </svg>
       </div>
