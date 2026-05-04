@@ -35,6 +35,7 @@ export default function QuizGame({ lesson }: { lesson: Lesson }) {
   const [correctCount, setCorrectCount] = useState(0);
   const [input, setInput] = useState("");
   const [feedback, setFeedback] = useState<Feedback>(null);
+  const [waitingForContinue, setWaitingForContinue] = useState(false);
   const [completed, setCompleted] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -47,11 +48,30 @@ export default function QuizGame({ lesson }: { lesson: Lesson }) {
     }
   }, [feedback, completed]);
 
+  // Listen for Enter to continue after an incorrect answer
+  useEffect(() => {
+    if (!waitingForContinue) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Enter") advance();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [waitingForContinue]);
+
+  function advance() {
+    setFeedback(null);
+    setInput("");
+    setWaitingForContinue(false);
+    setQueue((q) => [...q.slice(1), q[0]]);
+  }
+
   function handleRestart() {
     setQueue(buildQueue());
     setCorrectCount(0);
     setInput("");
     setFeedback(null);
+    setWaitingForContinue(false);
     setCompleted(false);
   }
 
@@ -64,11 +84,10 @@ export default function QuizGame({ lesson }: { lesson: Lesson }) {
 
     setFeedback(isCorrect ? "correct" : "incorrect");
 
-    setTimeout(() => {
-      setFeedback(null);
-      setInput("");
-
-      if (isCorrect) {
+    if (isCorrect) {
+      setTimeout(() => {
+        setFeedback(null);
+        setInput("");
         const next = queue.slice(1);
         if (next.length === 0) {
           setCompleted(true);
@@ -76,11 +95,11 @@ export default function QuizGame({ lesson }: { lesson: Lesson }) {
           setQueue(next);
           setCorrectCount((c) => c + 1);
         }
-      } else {
-        // Move current to end of queue
-        setQueue((q) => [...q.slice(1), q[0]]);
-      }
-    }, isCorrect ? 1000 : 1600);
+      }, 1000);
+    } else {
+      // Wait for the user to press Enter before moving on
+      setWaitingForContinue(true);
+    }
   }
 
   const progress = Math.round((correctCount / total) * 100);
@@ -156,8 +175,20 @@ export default function QuizGame({ lesson }: { lesson: Lesson }) {
         )}
         {feedback === "incorrect" && (
           <div className="mt-4 rounded-xl bg-red-500/20 px-4 py-3 text-red-300">
-            Not quite — the answer is:{" "}
-            <span className="font-semibold text-white">{current.german}</span>
+            <div className="mb-3">
+              Not quite — the answer is:{" "}
+              <span className="font-semibold text-white">{current.german}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-red-400/70">click enter to proceed</span>
+              <button
+                type="button"
+                onClick={advance}
+                className="rounded-lg bg-red-500/20 px-3 py-1 text-sm font-medium text-red-200 transition hover:bg-red-500/40"
+              >
+                Continue →
+              </button>
+            </div>
           </div>
         )}
       </div>
