@@ -6,20 +6,30 @@ export type ModeKey = "flashcard" | "multipleChoice" | "quiz";
 export type LessonProgress = Partial<Record<ModeKey, "completed">>;
 type ProgressStore = Record<string, LessonProgress>;
 
-const STORAGE_KEY = "german-progress";
+const COOKIE_NAME = "german-progress";
+const COOKIE_DAYS = 365;
 
-function loadStore(): ProgressStore {
-  if (typeof window === "undefined") return {};
+function readCookie(): ProgressStore {
+  if (typeof document === "undefined") return {};
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as ProgressStore) : {};
+    const match = document.cookie
+      .split("; ")
+      .find((c) => c.startsWith(COOKIE_NAME + "="));
+    if (!match) return {};
+    return JSON.parse(decodeURIComponent(match.slice(COOKIE_NAME.length + 1))) as ProgressStore;
   } catch {
     return {};
   }
 }
 
+function writeCookie(store: ProgressStore) {
+  const expires = new Date();
+  expires.setDate(expires.getDate() + COOKIE_DAYS);
+  document.cookie = `${COOKIE_NAME}=${encodeURIComponent(JSON.stringify(store))}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
+}
+
 export function useProgress() {
-  const [store, setStore] = useState<ProgressStore>(() => loadStore());
+  const [store, setStore] = useState<ProgressStore>(() => readCookie());
 
   const getLesson = useCallback(
     (id: string): LessonProgress => store[id] ?? {},
@@ -33,9 +43,9 @@ export function useProgress() {
         [id]: { ...prev[id], [mode]: "completed" as const },
       };
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        writeCookie(next);
       } catch {
-        // storage unavailable
+        // cookies unavailable
       }
       return next;
     });
