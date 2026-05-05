@@ -2,6 +2,7 @@ import { lessons, UNIT_META } from "@/data/lessons";
 import { UNIT_COLOR_MAP } from "@/lib/utils";
 import LessonCard from "@/components/LessonCard";
 import UnitProgressBar from "@/components/UnitProgressBar";
+import WeakWordsEntry from "@/components/WeakWordsEntry";
 
 export default function Home() {
   const totalWords = lessons.reduce((acc, l) => acc + l.phrases.length, 0);
@@ -60,6 +61,9 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Weak words entry — renders only when user has weak words (client) */}
+      <WeakWordsEntry />
 
       {/* Unit sections */}
       {Object.entries(units).map(([unit, unitLessons]) => {

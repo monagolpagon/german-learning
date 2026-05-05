@@ -3,14 +3,17 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { Lesson, Phrase } from "@/data/lessons";
 import { useProgress } from "@/hooks/useProgress";
+import { useWeakWords } from "@/hooks/useWeakWords";
 import { shuffle, speak } from "@/lib/utils";
 import CompletionScreen from "./CompletionScreen";
+import WeakWordToggle from "./WeakWordToggle";
 
 type Feedback = "correct" | "incorrect" | null;
 
 export default function QuizGame({ lesson }: { lesson: Lesson }) {
   const total = lesson.phrases.length;
   const { markComplete } = useProgress();
+  const { addWord } = useWeakWords();
 
   const buildQueue = useCallback(() => shuffle(lesson.phrases), [lesson.phrases]);
 
@@ -44,6 +47,7 @@ export default function QuizGame({ lesson }: { lesson: Lesson }) {
     setFeedback(null);
     setInput("");
     setWaitingForContinue(false);
+    // Re-queue at end
     setQueue((q) => [...q.slice(1), q[0]]);
   }
 
@@ -79,6 +83,8 @@ export default function QuizGame({ lesson }: { lesson: Lesson }) {
         }
       }, 1000);
     } else {
+      // Auto-add wrong answers to weak words
+      addWord({ lessonId: lesson.id, english: current.english, german: current.german });
       setWaitingForContinue(true);
     }
   }
@@ -115,9 +121,16 @@ export default function QuizGame({ lesson }: { lesson: Lesson }) {
 
       {/* Card */}
       <div className="rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur-sm">
-        <p className="mb-2 text-xs uppercase tracking-widest text-white/40">
-          Translate to German
-        </p>
+        <div className="mb-4 flex items-center justify-between">
+          <p className="text-xs uppercase tracking-widest text-white/40">
+            Translate to German
+          </p>
+          <WeakWordToggle
+            lessonId={lesson.id}
+            english={current.english}
+            german={current.german}
+          />
+        </div>
 
         <div className="mb-8 flex items-center gap-3">
           <p className="text-3xl font-bold text-white">{current.english}</p>

@@ -5,6 +5,7 @@ import type { Lesson, Phrase } from "@/data/lessons";
 import { useProgress } from "@/hooks/useProgress";
 import { shuffle, speak } from "@/lib/utils";
 import CompletionScreen from "./CompletionScreen";
+import WeakWordToggle from "./WeakWordToggle";
 
 export default function FlashcardGame({ lesson }: { lesson: Lesson }) {
   const total = lesson.phrases.length;
@@ -22,9 +23,9 @@ export default function FlashcardGame({ lesson }: { lesson: Lesson }) {
   // Space bar to flip
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === " " || e.key === "ArrowRight" || e.key === "ArrowLeft") {
+      if (e.key === " ") {
         e.preventDefault();
-        if (e.key === " ") setFlipped((f) => !f);
+        setFlipped((f) => !f);
       }
     }
     window.addEventListener("keydown", onKey);
@@ -106,22 +107,29 @@ export default function FlashcardGame({ lesson }: { lesson: Lesson }) {
 
           {/* Back — English */}
           <div
-            className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl border border-indigo-500/30 bg-indigo-500/10 p-8 backdrop-blur-sm"
+            className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-2xl border border-indigo-500/30 bg-indigo-500/10 p-8 backdrop-blur-sm"
             style={{
               backfaceVisibility: "hidden",
               transform: "rotateY(180deg)",
             }}
           >
-            <p className="mb-2 text-xs uppercase tracking-widest text-indigo-400/60">English</p>
+            <p className="mb-1 text-xs uppercase tracking-widest text-indigo-400/60">English</p>
             <p className="text-center text-3xl font-bold text-white">{current.english}</p>
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); speak(current.german); }}
-              className="mt-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/60 transition hover:bg-white/20 hover:text-white"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/60 transition hover:bg-white/20 hover:text-white"
               title="Hear pronunciation"
             >
               🔊
             </button>
+            <div onClick={(e) => e.stopPropagation()}>
+              <WeakWordToggle
+                lessonId={lesson.id}
+                english={current.english}
+                german={current.german}
+              />
+            </div>
           </div>
         </div>
       </div>

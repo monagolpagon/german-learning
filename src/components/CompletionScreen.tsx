@@ -2,8 +2,8 @@ import Link from "next/link";
 import type { ModeKey } from "@/hooks/useProgress";
 
 const NEXT: Record<ModeKey, { label: string; path: (id: string) => string } | null> = {
-  flashcard: { label: "Try Multiple Choice →", path: (id) => `/lesson/${id}/multiple-choice` },
-  multipleChoice: { label: "Try Type Quiz →", path: (id) => `/lesson/${id}/quiz` },
+  flashcard: { label: "Try Multiple Choice →", path: (id) => id === "weak-words" ? "/weak-words/multiple-choice" : `/lesson/${id}/multiple-choice` },
+  multipleChoice: { label: "Try Type Quiz →", path: (id) => id === "weak-words" ? "/weak-words/quiz" : `/lesson/${id}/quiz` },
   quiz: null,
 };
 
@@ -50,10 +50,10 @@ export default function CompletionScreen({
           </Link>
         ) : (
           <Link
-            href={`/lesson/${lessonId}`}
+            href={lessonId === "weak-words" ? "/weak-words" : `/lesson/${lessonId}`}
             className="rounded-xl bg-indigo-600 px-6 py-2.5 font-semibold text-white transition hover:bg-indigo-500"
           >
-            Back to lesson →
+            {lessonId === "weak-words" ? "Back to weak words →" : "Back to lesson →"}
           </Link>
         )}
       </div>

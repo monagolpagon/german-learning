@@ -3,17 +3,20 @@
 import { useState, useMemo, useCallback } from "react";
 import type { Lesson, Phrase } from "@/data/lessons";
 import { useProgress } from "@/hooks/useProgress";
+import { useWeakWords } from "@/hooks/useWeakWords";
 import { shuffle } from "@/lib/utils";
 import CompletionScreen from "./CompletionScreen";
+import WeakWordToggle from "./WeakWordToggle";
 
 export default function MultipleChoiceGame({ lesson }: { lesson: Lesson }) {
   const total = lesson.phrases.length;
   const { markComplete } = useProgress();
+  const { addWord } = useWeakWords();
 
   const buildQueue = useCallback(() => shuffle(lesson.phrases), [lesson.phrases]);
 
   const [queue, setQueue] = useState<Phrase[]>(() => buildQueue());
-  const [score, setScore] = useState(0);
+  const [correctCount, setCorrectCount] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
   const [completed, setCompleted] = useState(false);
 
@@ -28,7 +31,7 @@ export default function MultipleChoiceGame({ lesson }: { lesson: Lesson }) {
       .slice(0, 3)
       .map((p) => p.german);
     return shuffle([current.german, ...others]);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current?.german]);
 
   function handleSelect(option: string) {
@@ -36,31 +39,40 @@ export default function MultipleChoiceGame({ lesson }: { lesson: Lesson }) {
     setSelected(option);
 
     const isCorrect = option === current.german;
-    const delay = isCorrect ? 700 : 1400;
+
+    if (!isCorrect) {
+      // Auto-add wrong answers to weak words
+      addWord({ lessonId: lesson.id, english: current.english, german: current.german });
+    }
 
     setTimeout(() => {
-      const next = queue.slice(1);
-      if (next.length === 0) {
-        if (isCorrect) {
+      if (isCorrect) {
+        // Remove from queue — word mastered
+        const next = queue.slice(1);
+        if (next.length === 0) {
           markComplete(lesson.id, "multipleChoice");
+          setCompleted(true);
+        } else {
+          setCorrectCount((c) => c + 1);
+          setQueue(next);
+          setSelected(null);
         }
-        setCompleted(true);
       } else {
-        if (isCorrect) setScore((s) => s + 1);
-        setQueue(next);
+        // Re-queue at end — word not yet mastered
+        setQueue((q) => [...q.slice(1), q[0]]);
         setSelected(null);
       }
-    }, delay);
+    }, isCorrect ? 700 : 1400);
   }
 
   function handleRestart() {
     setQueue(buildQueue());
-    setScore(0);
+    setCorrectCount(0);
     setSelected(null);
     setCompleted(false);
   }
 
-  const progress = Math.round(((total - queue.length) / total) * 100);
+  const progress = Math.round((correctCount / total) * 100);
 
   if (completed) {
     return (
@@ -79,8 +91,8 @@ export default function MultipleChoiceGame({ lesson }: { lesson: Lesson }) {
       {/* Progress */}
       <div>
         <div className="mb-1 flex justify-between text-xs text-white/40">
-          <span>{score} / {total} correct</span>
-          <span>{queue.length} remaining</span>
+          <span>{correctCount} / {total} mastered</span>
+          <span>{queue.length} in queue</span>
         </div>
         <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
           <div
@@ -92,9 +104,17 @@ export default function MultipleChoiceGame({ lesson }: { lesson: Lesson }) {
 
       {/* Question */}
       <div className="rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur-sm">
-        <p className="mb-4 text-xs uppercase tracking-widest text-white/40">
-          Choose the German translation
-        </p>
+        <div className="mb-4 flex items-center justify-between">
+          <p className="text-xs uppercase tracking-widest text-white/40">
+            Choose the German translation
+          </p>
+          <WeakWordToggle
+            lessonId={lesson.id}
+            english={current.english}
+            german={current.german}
+          />
+        </div>
+
         <p className="mb-8 text-3xl font-bold text-white">{current.english}</p>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -110,7 +130,7 @@ export default function MultipleChoiceGame({ lesson }: { lesson: Lesson }) {
             } else if (isCorrect) {
               style = "w-full rounded-xl border border-green-500/60 bg-green-500/20 px-4 py-3 text-left font-medium text-green-300";
             } else if (isSelected) {
-              style = "w-full rounded-xl border border-red-500/60 bg-red-500/20 px-4 py-3 text-left font-medium text-red-300";
+              style = "w-full rounded-xl border border-red-500/60 bg-red-500/20 px-4 py-3 text-left font-medium text-red-300 line-through";
             } else {
               style += " opacity-40";
             }
@@ -128,6 +148,12 @@ export default function MultipleChoiceGame({ lesson }: { lesson: Lesson }) {
             );
           })}
         </div>
+
+        {selected && selected !== current.german && (
+          <p className="mt-4 text-xs text-amber-400/80">
+            Wrong answer added to your weak words — keep going!
+          </p>
+        )}
       </div>
     </div>
   );
