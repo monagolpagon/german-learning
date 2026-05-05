@@ -1,40 +1,18 @@
 import Link from "next/link";
-import type { Lesson } from "@/data/lessons";
+import { UNIT_META, type Lesson } from "@/data/lessons";
+import { UNIT_COLOR_MAP } from "@/lib/utils";
+import LessonProgressBadges from "./LessonProgressBadges";
 
-const UNIT_ACCENTS = [
-  {
-    number: "bg-indigo-500 shadow-indigo-500/40",
-    glow: "hover:shadow-indigo-500/20",
-    border: "hover:border-indigo-500/40",
-    text: "text-indigo-400",
-    label: "text-indigo-400/60",
-  },
-  {
-    number: "bg-emerald-500 shadow-emerald-500/40",
-    glow: "hover:shadow-emerald-500/20",
-    border: "hover:border-emerald-500/40",
-    text: "text-emerald-400",
-    label: "text-emerald-400/60",
-  },
-  {
-    number: "bg-amber-500 shadow-amber-500/40",
-    glow: "hover:shadow-amber-500/20",
-    border: "hover:border-amber-500/40",
-    text: "text-amber-400",
-    label: "text-amber-400/60",
-  },
-  {
-    number: "bg-rose-500 shadow-rose-500/40",
-    glow: "hover:shadow-rose-500/20",
-    border: "hover:border-rose-500/40",
-    text: "text-rose-400",
-    label: "text-rose-400/60",
-  },
-];
+// Build a lookup from unit number → color key
+const UNIT_COLOR: Record<string, string> = {};
+for (const u of UNIT_META) {
+  UNIT_COLOR[u.number] = u.color;
+}
 
 export default function LessonCard({ lesson }: { lesson: Lesson }) {
-  const unitIndex = (parseInt(lesson.number.split(".")[0]) - 1) % UNIT_ACCENTS.length;
-  const accent = UNIT_ACCENTS[unitIndex];
+  const unitNum = lesson.number.split(".")[0];
+  const colorKey = UNIT_COLOR[unitNum] ?? "indigo";
+  const accent = UNIT_COLOR_MAP[colorKey];
 
   return (
     <Link
@@ -43,7 +21,7 @@ export default function LessonCard({ lesson }: { lesson: Lesson }) {
     >
       {/* Lesson number badge */}
       <div
-        className={`relative flex-shrink-0 flex h-16 w-16 items-center justify-center rounded-2xl ${accent.number} shadow-lg font-black text-white text-lg leading-none`}
+        className={`relative flex-shrink-0 flex h-16 w-16 items-center justify-center rounded-2xl ${accent.badge} shadow-lg font-black text-white text-lg leading-none`}
       >
         {lesson.number}
       </div>
@@ -57,14 +35,15 @@ export default function LessonCard({ lesson }: { lesson: Lesson }) {
           </h2>
         </div>
         <p className="text-sm text-white/40 truncate">{lesson.description}</p>
-        <div className="mt-2.5 flex items-center gap-2">
+        <div className="mt-2 flex items-center gap-2">
           <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-xs text-white/40">
             {lesson.phrases.length} words
           </span>
-          <span className="rounded-full border border-indigo-500/40 bg-indigo-500/10 px-2.5 py-0.5 text-xs font-semibold text-indigo-400">
+          <span className={`rounded-full border ${accent.ring} ${accent.bg} px-2.5 py-0.5 text-xs font-semibold ${accent.text}`}>
             A1
           </span>
         </div>
+        <LessonProgressBadges lessonId={lesson.id} />
       </div>
 
       {/* Play button */}

@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
 import { getLessonById, lessons } from "@/data/lessons";
-import ModeSelector from "@/components/ModeSelector";
+import FlashcardGame from "@/components/FlashcardGame";
 
 export function generateStaticParams() {
   return lessons.map((l) => ({ id: l.id }));
 }
 
-export default async function LessonPage({
+export default async function FlashcardPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -15,5 +15,5 @@ export default async function LessonPage({
   const lesson = getLessonById(id);
   if (!lesson) notFound();
 
-  return <ModeSelector lesson={lesson} />;
+  return <FlashcardGame lesson={lesson} />;
 }

@@ -2,34 +2,17 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { Lesson, Phrase } from "@/data/lessons";
+import { useProgress } from "@/hooks/useProgress";
+import { shuffle, speak } from "@/lib/utils";
 import CompletionScreen from "./CompletionScreen";
 
 type Feedback = "correct" | "incorrect" | null;
 
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-function speak(text: string) {
-  if (typeof window === "undefined") return;
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "en-US";
-  window.speechSynthesis.speak(utterance);
-}
-
 export default function QuizGame({ lesson }: { lesson: Lesson }) {
   const total = lesson.phrases.length;
+  const { markComplete } = useProgress();
 
-  const buildQueue = useCallback(
-    () => shuffle(lesson.phrases),
-    [lesson.phrases]
-  );
+  const buildQueue = useCallback(() => shuffle(lesson.phrases), [lesson.phrases]);
 
   const [queue, setQueue] = useState<Phrase[]>(() => buildQueue());
   const [correctCount, setCorrectCount] = useState(0);
@@ -41,14 +24,12 @@ export default function QuizGame({ lesson }: { lesson: Lesson }) {
 
   const current = queue[0];
 
-  // Focus input on mount and after each advance
   useEffect(() => {
     if (!completed && !feedback) {
       inputRef.current?.focus();
     }
   }, [feedback, completed]);
 
-  // Listen for Enter to continue after an incorrect answer
   useEffect(() => {
     if (!waitingForContinue) return;
     function onKey(e: KeyboardEvent) {
@@ -56,7 +37,7 @@ export default function QuizGame({ lesson }: { lesson: Lesson }) {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [waitingForContinue]);
 
   function advance() {
@@ -90,6 +71,7 @@ export default function QuizGame({ lesson }: { lesson: Lesson }) {
         setInput("");
         const next = queue.slice(1);
         if (next.length === 0) {
+          markComplete(lesson.id, "quiz");
           setCompleted(true);
         } else {
           setQueue(next);
@@ -97,7 +79,6 @@ export default function QuizGame({ lesson }: { lesson: Lesson }) {
         }
       }, 1000);
     } else {
-      // Wait for the user to press Enter before moving on
       setWaitingForContinue(true);
     }
   }
@@ -109,6 +90,8 @@ export default function QuizGame({ lesson }: { lesson: Lesson }) {
       <CompletionScreen
         lessonTitle={lesson.title}
         total={total}
+        lessonId={lesson.id}
+        mode="quiz"
         onRestart={handleRestart}
       />
     );
@@ -140,7 +123,7 @@ export default function QuizGame({ lesson }: { lesson: Lesson }) {
           <p className="text-3xl font-bold text-white">{current.english}</p>
           <button
             type="button"
-            onClick={() => speak(current.english)}
+            onClick={() => speak(current.english, "en-US")}
             title="Listen"
             className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/60 transition hover:bg-white/20 hover:text-white"
           >
@@ -167,7 +150,6 @@ export default function QuizGame({ lesson }: { lesson: Lesson }) {
           </button>
         </form>
 
-        {/* Feedback banner */}
         {feedback === "correct" && (
           <div className="mt-4 rounded-xl bg-green-500/20 px-4 py-3 text-green-300">
             Correct! ✓
