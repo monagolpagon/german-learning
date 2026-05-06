@@ -164,15 +164,33 @@ export default function QuizGame({ lesson }: { lesson: Lesson }) {
         </form>
 
         {feedback === "correct" && (
-          <div className="mt-4 rounded-xl bg-green-500/20 px-4 py-3 text-green-300">
-            Correct! ✓
+          <div className="mt-4 flex items-center gap-3 rounded-xl bg-green-500/20 px-4 py-3 text-green-300">
+            <span>Correct! ✓</span>
+            <button
+              type="button"
+              onClick={() => speak(current.german)}
+              title="Hear German pronunciation"
+              className="ml-auto flex h-8 w-8 items-center justify-center rounded-full bg-green-500/20 text-green-300 transition hover:bg-green-500/40"
+            >
+              🔊
+            </button>
           </div>
         )}
         {feedback === "incorrect" && (
           <div className="mt-4 rounded-xl bg-red-500/20 px-4 py-3 text-red-300">
-            <div className="mb-3">
-              Not quite — the answer is:{" "}
-              <span className="font-semibold text-white">{current.german}</span>
+            <div className="mb-3 flex items-center gap-2">
+              <span>
+                Not quite — the answer is:{" "}
+                <span className="font-semibold text-white">{current.german}</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => speak(current.german)}
+                title="Hear German pronunciation"
+                className="ml-auto flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-red-500/20 text-red-300 transition hover:bg-red-500/40"
+              >
+                🔊
+              </button>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-xs text-red-400/70">click enter to proceed</span>

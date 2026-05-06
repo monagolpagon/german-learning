@@ -102,7 +102,15 @@ export default function FlashcardGame({ lesson }: { lesson: Lesson }) {
           >
             <p className="mb-2 text-xs uppercase tracking-widest text-white/30">German</p>
             <p className="text-center text-4xl font-black text-white">{current.german}</p>
-            <p className="mt-6 text-xs text-white/20">tap or press space to flip</p>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); speak(current.german); }}
+              className="mt-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/60 transition hover:bg-white/20 hover:text-white"
+              title="Hear German pronunciation"
+            >
+              🔊
+            </button>
+            <p className="mt-3 text-xs text-white/20">tap or press space to flip</p>
           </div>
 
           {/* Back — English */}
@@ -115,14 +123,6 @@ export default function FlashcardGame({ lesson }: { lesson: Lesson }) {
           >
             <p className="mb-1 text-xs uppercase tracking-widest text-indigo-400/60">English</p>
             <p className="text-center text-3xl font-bold text-white">{current.english}</p>
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); speak(current.german); }}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/60 transition hover:bg-white/20 hover:text-white"
-              title="Hear pronunciation"
-            >
-              🔊
-            </button>
             <div onClick={(e) => e.stopPropagation()}>
               <WeakWordToggle
                 lessonId={lesson.id}

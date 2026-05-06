@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback } from "react";
 import type { Lesson, Phrase } from "@/data/lessons";
 import { useProgress } from "@/hooks/useProgress";
 import { useWeakWords } from "@/hooks/useWeakWords";
-import { shuffle } from "@/lib/utils";
+import { shuffle, speak } from "@/lib/utils";
 import CompletionScreen from "./CompletionScreen";
 import WeakWordToggle from "./WeakWordToggle";
 
@@ -149,10 +149,24 @@ export default function MultipleChoiceGame({ lesson }: { lesson: Lesson }) {
           })}
         </div>
 
-        {selected && selected !== current.german && (
-          <p className="mt-4 text-xs text-amber-400/80">
-            Wrong answer added to your weak words — keep going!
-          </p>
+        {selected && (
+          <div className="mt-4 flex items-center justify-between gap-3">
+            {selected !== current.german ? (
+              <p className="text-xs text-amber-400/80">
+                Wrong answer added to your weak words — keep going!
+              </p>
+            ) : (
+              <span />
+            )}
+            <button
+              type="button"
+              onClick={() => speak(current.german)}
+              title="Hear German pronunciation"
+              className="flex flex-shrink-0 items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 text-xs text-white/60 transition hover:bg-white/20 hover:text-white"
+            >
+              🔊 <span>{current.german}</span>
+            </button>
+          </div>
         )}
       </div>
     </div>
